@@ -1,0 +1,38 @@
+name: ci
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.x" # latest patch: govulncheck flags 1.27.0 stdlib advisories
+      - run: go mod verify
+      - run: go vet ./...
+      - run: go test -race ./...
+      - name: FIPS 140-3 module enabled
+        run: GODEBUG=fips140=on go test -short ./...
+      - name: FIPS 140-3 only
+        run: GODEBUG=fips140=only go test -run TestFIPSOnlyModule -v ./kat
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.15.0
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      - name: fuzz smoke
+        run: |
+          go test ./token -run '^$' -fuzz FuzzParse -fuzztime 15s
+          go test ./keys -run '^$' -fuzz FuzzDecode -fuzztime 15s
+          go test ./symmetric/kwp -run '^$' -fuzz FuzzUnwrap -fuzztime 15s
+          go test ./symmetric/siv -run '^$' -fuzz FuzzOpen -fuzztime 15s
+          go test ./password -run '^$' -fuzz FuzzVerify -fuzztime 15s
