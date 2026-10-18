@@ -172,7 +172,7 @@ func TestXWingSpecVectors(t *testing.T) {
 	c := schemes[string(XWing)].(circlScheme).s
 	for i := 0; i < 3; i++ {
 		seed := make([]byte, 32)
-		h.Read(seed)
+		_, _ = h.Read(seed)
 		hexLine("seed", seed)
 		pk, err := Public(XWing, seed)
 		if err != nil {
@@ -181,7 +181,7 @@ func TestXWingSpecVectors(t *testing.T) {
 		hexLine("sk", seed)
 		hexLine("pk", pk)
 		eseed := make([]byte, 64)
-		h.Read(eseed)
+		_, _ = h.Read(eseed)
 		hexLine("eseed", eseed)
 		pko, _ := c.UnmarshalBinaryPublicKey(pk)
 		ct, ss, err := c.EncapsulateDeterministically(pko, eseed)
@@ -196,9 +196,9 @@ func TestXWingSpecVectors(t *testing.T) {
 		fmt.Fprintf(w, "\n")
 	}
 	d := sha3.NewSHAKE128()
-	d.Write(w.Bytes())
+	_, _ = d.Write(w.Bytes())
 	sum := make([]byte, 32)
-	d.Read(sum)
+	_, _ = d.Read(sum)
 	if got := hex.EncodeToString(sum); got != "1bcd0057d861d6b866239936cadcaeee1ec0164dedc181c386e9e54fe46156fe" {
 		t.Fatalf("X-Wing vectors digest %s", got)
 	}

@@ -50,7 +50,7 @@ func TestKnownCiphertext(t *testing.T) {
 // Sizes around the 1 MiB segment boundary (first segment holds less: header + tag).
 func TestRoundTrip(t *testing.T) {
 	for _, n := range []int{0, 1, SegmentSize - 41 - 16, SegmentSize - 40 - 16, SegmentSize, 3*SegmentSize + 7} {
-		pt := bytes.Repeat([]byte{byte(n)}, n)
+		pt := bytes.Repeat([]byte{byte(n)}, n) //nolint:gosec // test filler, wrap is fine
 		got, err := open(key, seal(t, pt, []byte("file.pdf")), []byte("file.pdf"))
 		if err != nil || !bytes.Equal(got, pt) {
 			t.Fatalf("%d bytes: %v", n, err)

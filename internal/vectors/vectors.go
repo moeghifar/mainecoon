@@ -11,7 +11,7 @@ import (
 // Load decodes the JSON file at path into v.
 func Load(t testing.TB, path string, v any) {
 	t.Helper()
-	b, err := os.ReadFile(path)
+	b, err := os.ReadFile(path) //nolint:gosec // test helper, path is a testdata constant
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -124,7 +124,7 @@ func raw(key []byte, radix int, tweak []byte, x []uint16, enc bool) ([]uint16, e
 	}
 	y := make([]uint16, len(out))
 	for i := range out {
-		y[i] = uint16(strings.IndexByte(numerals, out[i]))
+		y[i] = uint16(strings.IndexByte(numerals, out[i])) //nolint:gosec // out is in the alphabet (radix <= 62)
 	}
 	return y, nil
 }

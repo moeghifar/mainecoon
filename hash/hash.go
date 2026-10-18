@@ -78,8 +78,8 @@ func XOF(alg string, data []byte, n int) ([]byte, error) {
 		return nil, errors.ErrInputInvalid.With("xof output must be 16..512 bytes")
 	}
 	x := f()
-	x.Write(data)
+	_, _ = x.Write(data) // hash writes never fail
 	out := make([]byte, n)
-	x.Read(out)
+	_, _ = x.Read(out) // XOF reads never fail
 	return out, nil
 }

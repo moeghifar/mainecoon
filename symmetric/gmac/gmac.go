@@ -32,7 +32,7 @@ func Sum(key, data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return g.Seal(nil, nil, nil, data), nil
+	return g.Seal(nil, nil, nil, data), nil //nolint:gosec // G407 false positive: NewGCMWithRandomNonce
 }
 
 // Verify returns nil for a valid nonce ‖ tag and ErrVerificationFailed otherwise.

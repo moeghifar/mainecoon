@@ -77,13 +77,13 @@ func Encrypt(alg Alg, key, plaintext, aad []byte) ([]byte, error) {
 	}
 	r, explicit := a.(randomNonce)
 	if !explicit {
-		return a.Seal(nil, nil, plaintext, aad), nil
+		return a.Seal(nil, nil, plaintext, aad), nil //nolint:gosec // G407 false positive: AEAD generates its own random nonce
 	}
 	n := make([]byte, NonceSize, NonceSize+len(plaintext)+TagSize)
 	if err := drbg.Read(n); err != nil {
 		return nil, err
 	}
-	return r.Seal(n, n, plaintext, aad), nil
+	return r.Seal(n, n, plaintext, aad), nil //nolint:gosec // G407 false positive: n is filled by drbg.Read
 }
 
 // Decrypt opens nonce ‖ ciphertext ‖ tag. Any wrong key, aad or byte gives ErrDecryptionFailed.
