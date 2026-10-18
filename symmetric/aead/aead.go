@@ -83,7 +83,7 @@ func Encrypt(alg Alg, key, plaintext, aad []byte) ([]byte, error) {
 	if err := drbg.Read(n); err != nil {
 		return nil, err
 	}
-	return r.AEAD.Seal(n, n, plaintext, aad), nil
+	return r.Seal(n, n, plaintext, aad), nil
 }
 
 // Decrypt opens nonce ‖ ciphertext ‖ tag. Any wrong key, aad or byte gives ErrDecryptionFailed.

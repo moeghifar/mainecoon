@@ -123,7 +123,7 @@ func FuzzVerify(f *testing.F) {
 				return
 			}
 		}
-		Verify("x", h)
+		_, _ = Verify("x", h)
 	})
 }
 

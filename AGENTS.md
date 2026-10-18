@@ -59,10 +59,11 @@ go test -short ./...                            # skip slow PBKDF2
 go test -race ./...
 GODEBUG=fips140=only go test -run TestFIPSOnlyModule .
 go vet ./...
+golangci-lint run ./...                         # .golangci.yml: standard + all staticcheck
 ```
 
 - stdlib `testing`, table-driven; no assertion framework.
-- **Run tests and vet before reporting done.** Report failures with output. If something
+- **Run tests, vet and golangci-lint before reporting done.** Report failures with output. If something
   could not be run, say so and call it unproven.
 
 ## Working agreement

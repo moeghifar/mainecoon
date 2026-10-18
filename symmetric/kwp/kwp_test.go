@@ -131,5 +131,5 @@ func FuzzUnwrap(f *testing.F) {
 	f.Add(make([]byte, 24))
 	f.Add(make([]byte, 16))
 	kek := make([]byte, KEKSize)
-	f.Fuzz(func(t *testing.T, in []byte) { Unwrap(kek, in) })
+	f.Fuzz(func(t *testing.T, in []byte) { _, _ = Unwrap(kek, in) })
 }

@@ -23,7 +23,9 @@ func seal(t *testing.T, pt, aad []byte) []byte {
 	if err != nil {
 		t.Fatal(err)
 	}
-	w.Write(pt)
+	if _, err := w.Write(pt); err != nil {
+		t.Fatal(err)
+	}
 	if err := w.Close(); err != nil {
 		t.Fatal(err)
 	}

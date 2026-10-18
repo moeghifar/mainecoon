@@ -81,7 +81,9 @@ func TestJWKShape(t *testing.T) {
 	pk, sk := gen(t, "Ed25519")
 	s, _ := Encode("Ed25519", sk, true, JWK)
 	var j map[string]string
-	json.Unmarshal([]byte(s), &j)
+	if err := json.Unmarshal([]byte(s), &j); err != nil {
+		t.Fatal(err)
+	}
 	if j["kty"] != "OKP" || j["crv"] != "Ed25519" || j["d"] == "" || j["x"] == "" {
 		t.Fatalf("RFC 8037 shape: %s", s)
 	}
@@ -95,7 +97,9 @@ func TestJWKShape(t *testing.T) {
 	_ = pk
 	r, _ := Encode("RSA-PSS-3072", mustRSA(t), true, JWK)
 	var rj map[string]string
-	json.Unmarshal([]byte(r), &rj)
+	if err := json.Unmarshal([]byte(r), &rj); err != nil {
+		t.Fatal(err)
+	}
 	for _, f := range []string{"n", "e", "d", "p", "q", "dp", "dq", "qi"} {
 		if rj[f] == "" {
 			t.Fatalf("RSA JWK lacks %s", f)
@@ -128,8 +132,8 @@ func FuzzDecode(f *testing.F) {
 	f.Fuzz(func(t *testing.T, s string, a uint8) {
 		alg := algs[int(a)%len(algs)]
 		for _, fm := range []Format{PEM, JWK} {
-			Decode(alg, s, false, fm)
-			Decode(alg, s, true, fm)
+			_, _ = Decode(alg, s, false, fm)
+			_, _ = Decode(alg, s, true, fm)
 		}
 	})
 }

@@ -23,8 +23,10 @@ jobs:
         run: GODEBUG=fips140=on go test -short ./...
       - name: FIPS 140-3 only
         run: GODEBUG=fips140=only go test -run TestFIPSOnlyModule -v ./kat
-      - name: staticcheck
-        run: go run honnef.co/go/tools/cmd/staticcheck@v0.8.2 ./...
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.15.0
       - name: govulncheck
         run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
       - name: fuzz smoke

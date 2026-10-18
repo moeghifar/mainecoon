@@ -183,7 +183,7 @@ FF3-1 (withdrawn by NIST) and AES-KW (use KWP). RSA below 2048 bits returns
   vector is noted in its `testdata/`.
 - **Fuzzing:** every parser that reads untrusted input (tokens, PEM/JWK, key unwrap, SIV,
   stored password hashes).
-- **CI:** vet, race, `GODEBUG=fips140=only`, staticcheck, govulncheck, fuzz smoke.
+- **CI:** vet, race, `GODEBUG=fips140=only`, golangci-lint (standard + all staticcheck), govulncheck, fuzz smoke.
 
 ```sh
 go test ./...                                              # all
