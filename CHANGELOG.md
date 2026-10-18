@@ -26,6 +26,8 @@ First release.
 ### Security
 - No hand-written cryptography: every algorithm is a call into the Go standard library,
   x/crypto, circl, tink-go or capitalone/fpe.
+- Internal secret buffers (password bytes, Argon2id output, decoded key DER/JWK) are wiped
+  with `clear()` after use; returned keys and secrets are the caller's to wipe.
 - Rejected algorithms return `ALGO_DISABLED`: MD5, SHA-1, 3DES, AES-CBC/ECB/CTR,
   RSA-PKCS1-v1.5, DSA, FF3-1, AES-KW.
 

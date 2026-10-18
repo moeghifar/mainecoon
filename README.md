@@ -145,6 +145,20 @@ if mcerr.Is(err, mcerr.ErrDecryptionFailed) { /* ... */ }
 `Error()` returns only the code (`DECRYPTION_FAILED`, `KEY_SIZE_INVALID`, …). Internal detail
 is in `Detail()`, for logs.
 
+### Wipe secrets you hold
+
+mainecoon wipes the buffers it creates internally. Keys and secrets it **returns** belong to
+the caller, so `clear()` them once they are no longer needed:
+
+```go
+ss, err := kem.Decapsulate(kem.MLKEM768, sk, ct)
+if err != nil { return err }
+defer clear(ss)
+```
+
+This is best effort: Go may already have copied the bytes, and `string` values cannot be
+wiped, so hold secrets as `[]byte`.
+
 ## Algorithms
 
 FIPS means NIST-approved for that use. Only standard-library code runs inside Go's validated

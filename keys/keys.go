@@ -15,6 +15,7 @@
 package keys
 
 import (
+	"bytes"
 	"crypto/ecdh"
 	"crypto/ecdsa"
 	"crypto/ed25519"
@@ -171,7 +172,9 @@ func encodePEM(alg string, raw []byte, private bool) (string, error) {
 	if err != nil {
 		return "", errFormat
 	}
-	return armor(der, private), nil
+	out := armor(der, private)
+	clear(der)
+	return out, nil
 }
 
 func armor(der []byte, private bool) string {
@@ -183,13 +186,18 @@ func armor(der []byte, private bool) string {
 }
 
 func decodePEM(alg, s string, private bool) ([]byte, error) {
-	blk, _ := pem.Decode([]byte(s))
+	in := []byte(s)
+	defer clear(in)
+	blk, _ := pem.Decode(in)
 	want := "PUBLIC KEY"
 	if private {
 		want = "PRIVATE KEY"
 	}
 	if blk == nil || blk.Type != want {
 		return nil, errFormat.With("expected a " + want + " PEM block")
+	}
+	if private { // wipe the decoded private DER; the returned raw never aliases it (RSA copies)
+		defer clear(blk.Bytes)
 	}
 	var key any
 	var err error
@@ -237,7 +245,7 @@ func decodePEM(alg, s string, private bool) ([]byte, error) {
 		if !isRSA(alg) {
 			return nil, errFormat
 		}
-		raw = blk.Bytes
+		raw = bytes.Clone(blk.Bytes)
 	case *mldsa.PrivateKey:
 		if mldsaParams(alg) != k.PublicKey().Parameters() {
 			return nil, errFormat
@@ -256,6 +264,7 @@ func decodePEM(alg, s string, private bool) ([]byte, error) {
 	}
 	if private { // confirm the bytes are a usable private key for alg (e.g. RSA size)
 		if _, err := Public(alg, raw); err != nil {
+			clear(raw)
 			return nil, err
 		}
 	}
@@ -315,16 +324,22 @@ func encodeJWK(alg string, raw []byte, private bool) (string, error) {
 		if private {
 			j.Priv = b64.EncodeToString(raw)
 		}
-		b, _ := json.Marshal(j)
-		return string(b), nil
+		return marshal(j), nil
 	default:
 		return "", errFormat.With("JWK is not defined for " + alg)
 	}
 	if private {
 		j.D = b64.EncodeToString(raw)
 	}
+	return marshal(j), nil
+}
+
+// marshal encodes a JWK and wipes the intermediate bytes, which hold the private members.
+func marshal(j jwk) string {
 	b, _ := json.Marshal(j)
-	return string(b), nil
+	s := string(b)
+	clear(b)
+	return s
 }
 
 func rsaJWK(der []byte, private bool) (string, error) {
@@ -344,14 +359,15 @@ func rsaJWK(der []byte, private bool) (string, error) {
 		return "", errFormat
 	}
 	sk.Precompute()
-	b, _ := json.Marshal(jwk{Kty: "RSA", N: enc(sk.N), E: enc(big.NewInt(int64(sk.E))), D: enc(sk.D),
-		P: enc(sk.Primes[0]), Q: enc(sk.Primes[1]), DP: enc(sk.Precomputed.Dp), DQ: enc(sk.Precomputed.Dq), QI: enc(sk.Precomputed.Qinv)})
-	return string(b), nil
+	return marshal(jwk{Kty: "RSA", N: enc(sk.N), E: enc(big.NewInt(int64(sk.E))), D: enc(sk.D),
+		P: enc(sk.Primes[0]), Q: enc(sk.Primes[1]), DP: enc(sk.Precomputed.Dp), DQ: enc(sk.Precomputed.Dq), QI: enc(sk.Precomputed.Qinv)}), nil
 }
 
 func decodeJWK(alg, s string, private bool) ([]byte, error) {
 	var j jwk
-	if err := json.Unmarshal([]byte(s), &j); err != nil {
+	in := []byte(s)
+	defer clear(in)
+	if err := json.Unmarshal(in, &j); err != nil {
 		return nil, errFormat
 	}
 	dec := func(v string) []byte { b, _ := b64.DecodeString(v); return b }
@@ -392,6 +408,7 @@ func decodeJWK(alg, s string, private bool) ([]byte, error) {
 	if private { // the private key must match the public members
 		derived, err := Public(alg, raw)
 		if err != nil || (len(pub) > 0 && string(derived) != string(pub)) {
+			clear(raw)
 			return nil, errFormat
 		}
 	}
@@ -402,7 +419,11 @@ func decodeJWK(alg, s string, private bool) ([]byte, error) {
 }
 
 func rsaFromJWK(alg string, j jwk, private bool) ([]byte, error) {
-	num := func(v string) *big.Int { b, _ := b64.DecodeString(v); return new(big.Int).SetBytes(b) }
+	num := func(v string) *big.Int { // SetBytes copies, so b can be wiped
+		b, _ := b64.DecodeString(v)
+		defer clear(b)
+		return new(big.Int).SetBytes(b)
+	}
 	if j.Kty != "RSA" {
 		return nil, errFormat
 	}
@@ -435,6 +456,7 @@ func rsaFromJWK(alg string, j jwk, private bool) ([]byte, error) {
 	}
 	if private {
 		if _, err := Public(alg, der); err != nil {
+			clear(der)
 			return nil, err
 		}
 		return der, nil

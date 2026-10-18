@@ -76,14 +76,18 @@ var kdfs = map[string]kdfFunc{
 		if err != nil {
 			return nil, err
 		}
-		return argon2.IDKey([]byte(pw), salt, t, m, par, uint32(n)), nil
+		b := []byte(pw)
+		defer clear(b)
+		return argon2.IDKey(b, salt, t, m, par, uint32(n)), nil
 	},
 	"scrypt": func(pw string, salt []byte, p Params, n int) ([]byte, error) {
 		N, r, par := def(p.N, ScryptMinN), def(p.R, 8), def(p.P, 1)
 		if N < ScryptMinN || N > ScryptMaxN || N&(N-1) != 0 || r < 8 || r > ScryptMaxR || par < 1 || par > ScryptMaxP {
 			return nil, errors.ErrParameterBelowFloor.With("scrypt needs N power of 2 in 2^15..2^20, r 8..32, p 1..16")
 		}
-		return scrypt.Key([]byte(pw), salt, N, r, par, n)
+		b := []byte(pw)
+		defer clear(b)
+		return scrypt.Key(b, salt, N, r, par, n)
 	},
 }
 
@@ -143,6 +147,8 @@ func Hash(alg, password string, p Params) (string, error) {
 	if len(password) == 0 || len(password) > MaxPassword {
 		return "", errors.ErrInputInvalid.With("password must be 1..4096 bytes")
 	}
+	pw := []byte(password)
+	defer clear(pw)
 	switch alg {
 	case "Argon2id":
 		t, m, par, err := argonParams(p)
@@ -153,7 +159,7 @@ func Hash(alg, password string, p Params) (string, error) {
 		if err := drbg.Read(salt); err != nil {
 			return "", err
 		}
-		h := argon2.IDKey([]byte(password), salt, t, m, par, 32)
+		h := argon2.IDKey(pw, salt, t, m, par, 32)
 		enc := base64.RawStdEncoding
 		return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, m, t, par, enc.EncodeToString(salt), enc.EncodeToString(h)), nil
 	case "bcrypt":
@@ -164,7 +170,7 @@ func Hash(alg, password string, p Params) (string, error) {
 		if len(password) > 72 {
 			return "", errors.ErrInputTooLarge.With("bcrypt truncates at 72 bytes; use Argon2id")
 		}
-		h, err := bcrypt.GenerateFromPassword([]byte(password), cost)
+		h, err := bcrypt.GenerateFromPassword(pw, cost)
 		return string(h), err
 	}
 	_, err := reg.Lookup(map[string]bool{}, alg)
@@ -174,6 +180,8 @@ func Hash(alg, password string, p Params) (string, error) {
 // Verify checks password against an encoded hash in constant time. A wrong password
 // is (false, nil); a malformed or out-of-bounds hash is an error.
 func Verify(password, encoded string) (bool, error) {
+	pw := []byte(password)
+	defer clear(pw)
 	switch {
 	case strings.HasPrefix(encoded, "$argon2id$"):
 		var v int
@@ -197,8 +205,10 @@ func Verify(password, encoded string) (bool, error) {
 		if err1 != nil || err2 != nil || len(salt) < MinSalt || len(want) < 16 || len(want) > 64 {
 			return false, errors.ErrInputInvalid.With("bad argon2id salt or hash")
 		}
-		got := argon2.IDKey([]byte(password), salt, t, m, par, uint32(len(want))) //nolint:gosec // len(want) <= 64, checked above
-		return subtle.ConstantTimeCompare(got, want) == 1, nil
+		got := argon2.IDKey(pw, salt, t, m, par, uint32(len(want))) //nolint:gosec // len(want) <= 64, checked above
+		ok := subtle.ConstantTimeCompare(got, want) == 1
+		clear(got)
+		return ok, nil
 	case strings.HasPrefix(encoded, "$2a$"), strings.HasPrefix(encoded, "$2b$"), strings.HasPrefix(encoded, "$2y$"):
 		cost, err := bcrypt.Cost([]byte(encoded))
 		if err != nil {
@@ -207,7 +217,7 @@ func Verify(password, encoded string) (bool, error) {
 		if cost > BcryptMaxCost {
 			return false, errors.ErrInputInvalid.With("bcrypt cost above ceiling")
 		}
-		err = bcrypt.CompareHashAndPassword([]byte(encoded), []byte(password))
+		err = bcrypt.CompareHashAndPassword([]byte(encoded), pw)
 		if err == bcrypt.ErrMismatchedHashAndPassword || err == bcrypt.ErrPasswordTooLong {
 			return false, nil
 		}
