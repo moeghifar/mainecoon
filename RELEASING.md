@@ -16,7 +16,7 @@ and no commits yet.
    go run honnef.co/go/tools/cmd/staticcheck@v0.8.2 ./...
    go run golang.org/x/vuln/cmd/govulncheck@latest ./...
    ```
-3. **Check what will be committed** (`.specify/` and `.claude/settings.local.json` are ignored):
+3. **Check what will be committed** (`.specify/` and `.claude/` are ignored):
    ```sh
    git status --short
    ```

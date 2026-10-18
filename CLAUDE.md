@@ -9,5 +9,5 @@ read `AGENTS.md` in the repo root, then `.specify/AGENTS.md` and the vault `plan
 Claude-specific:
 
 - No attribution: never add `Co-Authored-By: Claude`, "Generated with Claude Code" or similar
-  to commits, PRs, tags or files (`.claude/settings.json` disables it as well).
+  to commits, PRs, tags or files.
 - Run `go vet ./... && go test ./...` before saying a change is done.
