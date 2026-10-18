@@ -3,7 +3,7 @@
 All notable changes are listed here. The project follows [Semantic Versioning](https://semver.org/);
 while the major version is 0, a minor release may change the API.
 
-## [0.1.0] — 2026-10-20
+## [0.1.0] — 2026-10-18
 
 First release.
 
