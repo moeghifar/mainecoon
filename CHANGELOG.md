@@ -1,8 +1,7 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
-
-## [0.1.1](https://github.com/moeghifar/mainecoon/compare/v0.1.0...v0.1.1) (2026-10-18)
+All notable changes are listed here. The project follows [Semantic Versioning](https://semver.org/);
+while the major version is 0, a minor release may change the API.
 
 ## [0.1.0] — 2026-10-18
 
