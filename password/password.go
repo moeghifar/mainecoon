@@ -95,7 +95,11 @@ func def(v, d int) int {
 }
 
 func argonParams(p Params) (t, m uint32, par uint8, err error) {
-	t, m, par = uint32(def(p.Iterations, ArgonMinTime)), p.MemoryKiB, p.Parallelism
+	it := def(p.Iterations, ArgonMinTime)
+	if it < 0 || it > ArgonMaxTime { // check before narrowing: uint32(1<<32+5) == 5
+		return 0, 0, 0, errors.ErrParameterBelowFloor.With("Argon2id needs t 3..64, m 64MiB..256MiB, p 4..64")
+	}
+	t, m, par = uint32(it), p.MemoryKiB, p.Parallelism //nolint:gosec // range checked above
 	if m == 0 {
 		m = ArgonMinMemKiB
 	}
@@ -193,7 +197,7 @@ func Verify(password, encoded string) (bool, error) {
 		if err1 != nil || err2 != nil || len(salt) < MinSalt || len(want) < 16 || len(want) > 64 {
 			return false, errors.ErrInputInvalid.With("bad argon2id salt or hash")
 		}
-		got := argon2.IDKey([]byte(password), salt, t, m, par, uint32(len(want)))
+		got := argon2.IDKey([]byte(password), salt, t, m, par, uint32(len(want))) //nolint:gosec // len(want) <= 64, checked above
 		return subtle.ConstantTimeCompare(got, want) == 1, nil
 	case strings.HasPrefix(encoded, "$2a$"), strings.HasPrefix(encoded, "$2b$"), strings.HasPrefix(encoded, "$2y$"):
 		cost, err := bcrypt.Cost([]byte(encoded))

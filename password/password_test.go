@@ -134,3 +134,10 @@ func TestVerifyRejectsShortSalt(t *testing.T) {
 		t.Fatal("8-byte salt accepted:", err)
 	}
 }
+
+// An Iterations value past uint32 must be rejected, not wrapped into range (1<<32+5 -> 5).
+func TestArgon2idIterationsOverflow(t *testing.T) {
+	if _, err := Hash("Argon2id", "pw", Params{Iterations: 1<<32 + 5}); !errors.Is(err, errors.ErrParameterBelowFloor) {
+		t.Fatalf("got %v", err)
+	}
+}
