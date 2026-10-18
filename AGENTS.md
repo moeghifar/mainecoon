@@ -59,7 +59,8 @@ go test -short ./...                            # skip slow PBKDF2
 go test -race ./...
 GODEBUG=fips140=only go test -run TestFIPSOnlyModule .
 go vet ./...
-golangci-lint run ./...                         # .golangci.yml: standard + all staticcheck
+golangci-lint run ./...                         # .golangci.yml: standard + all staticcheck + gosec
+go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...   # known CVEs in deps + stdlib
 ```
 
 - stdlib `testing`, table-driven; no assertion framework.

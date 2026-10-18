@@ -27,8 +27,8 @@ jobs:
         uses: golangci/golangci-lint-action@v8
         with:
           version: v2.15.0
-      - name: govulncheck
-        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      - name: govulncheck # deps + stdlib CVEs; not a golangci-lint linter
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
       - name: fuzz smoke
         run: |
           go test ./token -run '^$' -fuzz FuzzParse -fuzztime 15s
