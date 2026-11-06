@@ -87,6 +87,10 @@ import "github.com/moeghifar/mainecoon/asymmetric/hpke"
 pk, sk, _ := hpke.GenerateKey(hpke.Hybrid) // ML-KEM-768 + P-256
 ct, _ := hpke.Encrypt(hpke.Hybrid, pk, pt, aad)
 pt, _ := hpke.Decrypt(hpke.Hybrid, sk, ct, aad)
+
+// Caller-chosen info (EncryptWithInfo/DecryptWithInfo) and secret export (RFC 9180 §5.3):
+enc, secret, _ := hpke.SenderExport(hpke.Hybrid, pk, info, exporterCtx, 32)
+secret, _ = hpke.ReceiverExport(hpke.Hybrid, sk, enc, info, exporterCtx, 32)
 ```
 
 ### Agree on a shared secret (KEM)

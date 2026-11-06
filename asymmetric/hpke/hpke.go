@@ -16,7 +16,9 @@
 // The ML-KEM hybrid KEMs follow draft-ietf-hpke-pq as implemented by Go's crypto/hpke.
 //
 // The ciphertext is one value: the KEM encapsulation, then the AEAD output. info is fixed
-// to Info so a ciphertext cannot be replayed into another protocol.
+// to Info so a ciphertext cannot be replayed into another protocol; the *WithInfo functions
+// take a caller-chosen info for interop. SenderExport/ReceiverExport derive a shared secret
+// (RFC 9180 §5.3, base mode) instead of encrypting.
 package hpke
 
 import (
@@ -87,7 +89,13 @@ func Public(alg Alg, sk []byte) ([]byte, error) {
 
 // Encrypt seals pt to the recipient public key and returns enc ‖ ciphertext.
 func Encrypt(alg Alg, recipientPK, pt, aad []byte) ([]byte, error) {
-	return encrypt(alg, recipientPK, []byte(Info), pt, aad)
+	return EncryptWithInfo(alg, recipientPK, []byte(Info), pt, aad)
+}
+
+// EncryptWithInfo is Encrypt with a caller-chosen info string, for interop with other HPKE
+// implementations. Use Encrypt otherwise.
+func EncryptWithInfo(alg Alg, recipientPK, info, pt, aad []byte) ([]byte, error) {
+	return encrypt(alg, recipientPK, info, pt, aad)
 }
 
 // Decrypt opens enc ‖ ciphertext. Any failure is ErrDecryptionFailed.
@@ -142,4 +150,68 @@ func decrypt(alg Alg, recipientSK, info, in, aad []byte) ([]byte, error) {
 		return nil, errors.ErrDecryptionFailed
 	}
 	return pt, nil
+}
+
+// SenderExport derives a length-byte secret shared with the holder of recipientPK (RFC 9180
+// §5.3, base mode). Send enc to the recipient, who calls ReceiverExport with the same info
+// and exporterContext. length must be in 1..255*Nh (8160 for HKDF-SHA256 suites, 12240 for
+// HKDF-SHA384 suites), else ErrInputInvalid.
+func SenderExport(alg Alg, recipientPK, info, exporterContext []byte, length int) (enc, secret []byte, err error) {
+	s, err := reg.Lookup(suites, string(alg))
+	if err != nil {
+		return nil, nil, err
+	}
+	if err := checkExportLen(s, length); err != nil {
+		return nil, nil, err
+	}
+	pk, err := s.kem.NewPublicKey(recipientPK)
+	if err != nil {
+		return nil, nil, errors.ErrKeyFormatInvalid
+	}
+	enc, snd, err := stdhpke.NewSender(pk, s.kdf, s.aead, info)
+	if err != nil {
+		return nil, nil, err
+	}
+	secret, err = snd.Export(string(exporterContext), length)
+	if err != nil {
+		return nil, nil, err
+	}
+	return enc, secret, nil
+}
+
+// ReceiverExport derives the secret SenderExport returned, from its enc and the recipient
+// private key. A malformed enc is ErrInputInvalid; one that fails to decapsulate is
+// ErrDecapsulationFailed.
+func ReceiverExport(alg Alg, recipientSK, enc, info, exporterContext []byte, length int) ([]byte, error) {
+	s, err := reg.Lookup(suites, string(alg))
+	if err != nil {
+		return nil, err
+	}
+	if err := checkExportLen(s, length); err != nil {
+		return nil, err
+	}
+	sk, err := s.kem.NewPrivateKey(recipientSK)
+	if err != nil {
+		return nil, errors.ErrKeyFormatInvalid
+	}
+	if len(enc) != s.encSize {
+		return nil, errors.ErrInputInvalid
+	}
+	r, err := stdhpke.NewRecipient(enc, sk, s.kdf, s.aead, info)
+	if err != nil {
+		return nil, errors.ErrDecapsulationFailed
+	}
+	return r.Export(string(exporterContext), length)
+}
+
+// checkExportLen enforces RFC 9180 §5.3: 0 < L <= 255*Nh.
+func checkExportLen(s suite, length int) error {
+	nh := 32 // HKDF-SHA256
+	if s.kdf.ID() == stdhpke.HKDFSHA384().ID() {
+		nh = 48
+	}
+	if length < 1 || length > 255*nh {
+		return errors.ErrInputInvalid
+	}
+	return nil
 }
