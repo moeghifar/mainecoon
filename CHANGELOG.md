@@ -3,6 +3,15 @@
 All notable changes are listed here. The project follows [Semantic Versioning](https://semver.org/);
 while the major version is 0, a minor release may change the API.
 
+## [0.2.0] — 2026-11-07
+
+### Added
+- `hpke.EncryptWithInfo`: Encrypt with a caller-chosen info string, the counterpart of
+  `DecryptWithInfo`.
+- `hpke.SenderExport` / `hpke.ReceiverExport`: HPKE secret export (RFC 9180 §5.3, base mode)
+  for every suite; length is checked against 255·Nh. RFC 9180 exported-value vectors added
+  to `asymmetric/hpke/testdata/rfc9180.json`.
+
 ## [0.1.0] — 2026-10-18
 
 First release.
@@ -31,4 +40,5 @@ First release.
 - Rejected algorithms return `ALGO_DISABLED`: MD5, SHA-1, 3DES, AES-CBC/ECB/CTR,
   RSA-PKCS1-v1.5, DSA, FF3-1, AES-KW.
 
+[0.2.0]: https://github.com/moeghifar/mainecoon/releases/tag/v0.2.0
 [0.1.0]: https://github.com/moeghifar/mainecoon/releases/tag/v0.1.0
