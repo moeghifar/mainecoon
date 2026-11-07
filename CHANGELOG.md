@@ -3,7 +3,7 @@
 All notable changes are listed here. The project follows [Semantic Versioning](https://semver.org/);
 while the major version is 0, a minor release may change the API.
 
-## [Unreleased]
+## [0.2.0] — 2026-11-07
 
 ### Added
 - `hpke.EncryptWithInfo`: Encrypt with a caller-chosen info string, the counterpart of
@@ -40,4 +40,5 @@ First release.
 - Rejected algorithms return `ALGO_DISABLED`: MD5, SHA-1, 3DES, AES-CBC/ECB/CTR,
   RSA-PKCS1-v1.5, DSA, FF3-1, AES-KW.
 
+[0.2.0]: https://github.com/moeghifar/mainecoon/releases/tag/v0.2.0
 [0.1.0]: https://github.com/moeghifar/mainecoon/releases/tag/v0.1.0
