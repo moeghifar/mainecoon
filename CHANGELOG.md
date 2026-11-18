@@ -3,6 +3,14 @@
 All notable changes are listed here. The project follows [Semantic Versioning](https://semver.org/);
 while the major version is 0, a minor release may change the API.
 
+## [0.2.1] — 2026-11-18
+
+### Security
+- Build toolchain pinned to Go 1.27.4 (latest patch); minimum stays `go 1.27`.
+- `golang.org/x/crypto` v0.59.0, `golang.org/x/sys` v0.50.0, `google.golang.org/protobuf` v1.36.12.
+- Dependabot for Go modules (daily) and GitHub Actions (weekly); CI runs nightly so
+  govulncheck reports new advisories without waiting for a push.
+
 ## [0.2.0] — 2026-11-07
 
 ### Added
@@ -40,5 +48,6 @@ First release.
 - Rejected algorithms return `ALGO_DISABLED`: MD5, SHA-1, 3DES, AES-CBC/ECB/CTR,
   RSA-PKCS1-v1.5, DSA, FF3-1, AES-KW.
 
+[0.2.1]: https://github.com/moeghifar/mainecoon/releases/tag/v0.2.1
 [0.2.0]: https://github.com/moeghifar/mainecoon/releases/tag/v0.2.0
 [0.1.0]: https://github.com/moeghifar/mainecoon/releases/tag/v0.1.0
