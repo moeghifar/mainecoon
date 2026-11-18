@@ -4,6 +4,8 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
+  schedule:
+    - cron: "0 2 * * *" # nightly: govulncheck catches newly published advisories
 
 permissions:
   contents: read
