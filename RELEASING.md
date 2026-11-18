@@ -48,7 +48,8 @@ and no commits yet.
 
 ## Later releases
 
-1. Update CHANGELOG.md (new section, link at the bottom).
+1. Update CHANGELOG.md (new section, link at the bottom) and the `go get ...@vX.Y.Z` line and
+   Go patch version in README.md.
 2. PR → CI green → merge to `main`.
 3. `git tag -a vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z`, then the GitHub release.
 4. Never move or delete a pushed tag; the Go checksum database has recorded it. Fix forward with a new patch version (use `retract` in go.mod for a bad one).

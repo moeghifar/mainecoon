@@ -11,10 +11,10 @@ Those belong to the application that imports it.
 ## Install
 
 ```sh
-go get github.com/moeghifar/mainecoon@v0.1.0
+go get github.com/moeghifar/mainecoon@v0.2.1
 ```
 
-Requires **Go 1.27** (use the latest patch release). ML-KEM, ML-DSA, SLH-DSA and HPKE come
+Requires **Go 1.27** (latest patch, currently 1.27.4). ML-KEM, ML-DSA, SLH-DSA and HPKE come
 from the standard library in 1.27, so they run natively and inside the Go FIPS 140-3 module
 where Go supports it.
 
