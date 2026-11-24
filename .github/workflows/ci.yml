@@ -26,7 +26,7 @@ jobs:
       - name: FIPS 140-3 only
         run: GODEBUG=fips140=only go test -run TestFIPSOnlyModule -v ./kat
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v2.15.0
       - name: govulncheck # deps + stdlib CVEs; not a golangci-lint linter
